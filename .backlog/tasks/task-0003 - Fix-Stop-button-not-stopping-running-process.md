@@ -4,7 +4,7 @@ title: Fix Stop button not stopping running process
 status: Done
 assignee: []
 created_date: '2026-03-20 07:21'
-updated_date: '2026-03-20 07:23'
+updated_date: '2026-03-20 07:31'
 labels:
   - bug
   - process-control
@@ -63,4 +63,6 @@ Fixed Stop button not terminating running processes.
 2. On Windows, additionally run `taskkill /F /T /PID <pid>` to kill the entire process tree
 
 **Build:** Passed ✓
+
+**Follow-up fix:** Reordered operations - now runs `taskkill` FIRST before `kill()` + `wait()` to avoid 'process not found' error.
 <!-- SECTION:FINAL_SUMMARY:END -->
