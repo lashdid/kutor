@@ -98,8 +98,49 @@ impl ProcessManager {
         Ok(id)
     }
 
-    pub fn get_all_processes(&self) -> Vec<ProcessView> {
-        self.processes.values().map(ProcessView::from).collect()
+    pub fn get_all_processes(&mut self) -> Vec<ProcessView> {
+        let now_millis = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+
+        self.processes
+            .values()
+            .map(|process| {
+                let (status, error_message, memory_bytes, uptime_secs) = match &process.status {
+                    ProcessStatus::Stopped => ("stopped".to_string(), None, None, None),
+                    ProcessStatus::Crashed { error } => {
+                        ("crashed".to_string(), Some(error.clone()), None, None)
+                    }
+                    ProcessStatus::Running { pid, started_at } => {
+                        use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate};
+
+                        let pid = Pid::from_u32(*pid);
+                        self.system.refresh_processes_specifics(
+                            ProcessesToUpdate::Some(&[pid]),
+                            true,
+                            ProcessRefreshKind::nothing().with_memory(),
+                        );
+
+                        let memory_bytes = self.system.process(pid).map(|p| p.memory());
+                        let uptime_secs = Some((now_millis.saturating_sub(*started_at)) / 1000);
+
+                        ("running".to_string(), None, memory_bytes, uptime_secs)
+                    }
+                };
+
+                ProcessView {
+                    id: process.id.clone(),
+                    name: process.name.clone(),
+                    command: process.command.clone(),
+                    working_directory: process.working_directory.clone(),
+                    status,
+                    error_message,
+                    memory_bytes,
+                    uptime_secs,
+                }
+            })
+            .collect()
     }
 
     pub fn save_to_disk(&self) -> Result<(), KutorError> {
@@ -148,7 +189,7 @@ impl ProcessManager {
         let started_at = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_millis() as u64;
         process.status = ProcessStatus::Running { pid, started_at };
         self.child_processes.insert(id.to_string(), child);
         self.save_to_disk()?;
@@ -180,7 +221,7 @@ impl ProcessManager {
         let started_at = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_millis() as u64;
         process.status = ProcessStatus::Running { pid, started_at };
         self.child_processes.insert(id.to_string(), child);
         self.save_to_disk()?;
@@ -238,11 +279,49 @@ impl ProcessManager {
         }
     }
 
-    pub fn get_process(&self, id: &str) -> Result<ProcessView, KutorError> {
-        self.processes
+    pub fn get_process(&mut self, id: &str) -> Result<ProcessView, KutorError> {
+        let process = self
+            .processes
             .get(id)
-            .map(ProcessView::from)
-            .ok_or_else(|| KutorError::ProcessNotFound(id.to_string()))
+            .ok_or_else(|| KutorError::ProcessNotFound(id.to_string()))?;
+
+        let now_millis = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+
+        let (status, error_message, memory_bytes, uptime_secs) = match &process.status {
+            ProcessStatus::Stopped => ("stopped".to_string(), None, None, None),
+            ProcessStatus::Crashed { error } => {
+                ("crashed".to_string(), Some(error.clone()), None, None)
+            }
+            ProcessStatus::Running { pid, started_at } => {
+                use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate};
+
+                let pid = Pid::from_u32(*pid);
+                self.system.refresh_processes_specifics(
+                    ProcessesToUpdate::Some(&[pid]),
+                    true,
+                    ProcessRefreshKind::nothing().with_memory(),
+                );
+
+                let memory_bytes = self.system.process(pid).map(|p| p.memory());
+                let uptime_secs = Some((now_millis.saturating_sub(*started_at)) / 1000);
+
+                ("running".to_string(), None, memory_bytes, uptime_secs)
+            }
+        };
+
+        Ok(ProcessView {
+            id: process.id.clone(),
+            name: process.name.clone(),
+            command: process.command.clone(),
+            working_directory: process.working_directory.clone(),
+            status,
+            error_message,
+            memory_bytes,
+            uptime_secs,
+        })
     }
 }
 

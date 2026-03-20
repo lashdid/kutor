@@ -64,7 +64,7 @@ pub fn delete_process(
 pub fn get_all_processes(
     state: State<'_, Arc<Mutex<crate::process_manager::ProcessManager>>>,
 ) -> Result<Vec<ProcessView>, KutorError> {
-    let manager = state
+    let mut manager = state
         .lock()
         .map_err(|_| KutorError::IoError("Failed to lock manager".to_string()))?;
     Ok(manager.get_all_processes())
