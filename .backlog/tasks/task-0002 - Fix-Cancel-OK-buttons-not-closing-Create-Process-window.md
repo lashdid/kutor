@@ -1,9 +1,10 @@
 ---
 id: TASK-0002
 title: Fix Cancel/OK buttons not closing Create Process window
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-03-20 07:16'
+updated_date: '2026-03-20 07:20'
 labels:
   - bug
   - ui
