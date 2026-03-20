@@ -20,9 +20,9 @@ The "Create Process" button is not triggering the action to open a new window wh
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Clicking the 'Create Process' button opens a new window
-- [ ] #2 The button click event is properly wired and functional
-- [ ] #3 No console errors when clicking the button
+- [x] #1 Clicking the 'Create Process' button opens a new window
+- [x] #2 The button click event is properly wired and functional
+- [x] #3 No console errors when clicking the button
 <!-- AC:END -->
 
 ## Implementation Plan
