@@ -44,9 +44,10 @@ pub struct ProcessView {
 #### Implementation
 
 **ProcessManager:**
-- Add `sysinfo::System` field for querying process metrics
-- On `start_process`:record `started_at` as `SystemTime::now().duration_since(UNIX_EPOCH).as_millis()`
-- On `get_all_processes`: for each running process:
+- Add `sysinfo::System` field for querying process metrics (requires `&mut self` for refresh methods)
+- On `start_process`: record `started_at` as `SystemTime::now().duration_since(UNIX_EPOCH).as_millis()`
+- On `get_all_processes`: (changes signature to `&mut self`) for each running process:
+- On `get_process`: apply same metrics logic for single process queries
   - Query sysinfo for memory by PID using`refresh_processes_specifics`
   - Calculate `uptime_secs = (now_millis - started_at) / 1000`
 
@@ -79,6 +80,13 @@ Add to `Cargo.toml`:
 ```toml
 sysinfo = "0.33"
 ```
+
+#### Method Signature Changes
+
+- `get_all_processes(&self)` → `get_all_processes(&mut self)` (needs mut access to sysinfo::System)
+- `get_process(&self, id: &str)` → `get_process(&mut self, id: &str)` (same reason)
+
+The corresponding Tauri command handlers already use `Arc<Mutex<ProcessManager>>`, so `&mut self` access is available.
 
 ### Frontend (TypeScript/React)
 
