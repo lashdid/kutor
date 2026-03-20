@@ -4,12 +4,14 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Child;
+use std::time::{SystemTime, UNIX_EPOCH};
+use sysinfo::System;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ProcessStatus {
     Stopped,
-    Running { pid: u32 },
+    Running { pid: u32, started_at: u64 },
     Crashed { error: String },
 }
 
@@ -30,14 +32,19 @@ pub struct ProcessView {
     pub working_directory: String,
     pub status: String,
     pub error_message: Option<String>,
+    pub memory_bytes: Option<u64>,
+    pub uptime_secs: Option<u64>,
 }
 
 impl From<&Process> for ProcessView {
     fn from(process: &Process) -> Self {
         let (status, error_message) = match &process.status {
             ProcessStatus::Stopped => ("stopped".to_string(), None),
-            ProcessStatus::Running { pid: _ } => ("running".to_string(), None),
             ProcessStatus::Crashed { error } => ("crashed".to_string(), Some(error.clone())),
+            ProcessStatus::Running {
+                pid: _,
+                started_at: _,
+            } => ("running".to_string(), None),
         };
 
         ProcessView {
@@ -47,6 +54,8 @@ impl From<&Process> for ProcessView {
             working_directory: process.working_directory.clone(),
             status,
             error_message,
+            memory_bytes: None,
+            uptime_secs: None,
         }
     }
 }
@@ -55,6 +64,7 @@ pub struct ProcessManager {
     processes: HashMap<String, Process>,
     child_processes: HashMap<String, Child>,
     config_path: PathBuf,
+    system: System,
 }
 
 impl ProcessManager {
@@ -63,6 +73,7 @@ impl ProcessManager {
             processes: HashMap::new(),
             child_processes: HashMap::new(),
             config_path,
+            system: System::new(),
         }
     }
 
@@ -134,7 +145,11 @@ impl ProcessManager {
             .map_err(|e| KutorError::SpawnFailed(e.to_string()))?;
 
         let pid = child.id();
-        process.status = ProcessStatus::Running { pid };
+        let started_at = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        process.status = ProcessStatus::Running { pid, started_at };
         self.child_processes.insert(id.to_string(), child);
         self.save_to_disk()?;
 
@@ -162,7 +177,11 @@ impl ProcessManager {
             .map_err(|e| KutorError::SpawnFailed(e.to_string()))?;
 
         let pid = child.id();
-        process.status = ProcessStatus::Running { pid };
+        let started_at = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        process.status = ProcessStatus::Running { pid, started_at };
         self.child_processes.insert(id.to_string(), child);
         self.save_to_disk()?;
 
@@ -233,7 +252,10 @@ mod tests {
 
     #[test]
     fn test_process_status_serialization() {
-        let status = ProcessStatus::Running { pid: 12345 };
+        let status = ProcessStatus::Running {
+            pid: 12345,
+            started_at: 0,
+        };
         let json = serde_json::to_string(&status).unwrap();
         assert!(json.contains("Running"));
     }
@@ -245,7 +267,10 @@ mod tests {
             name: "Test Process".to_string(),
             command: "echo test".to_string(),
             working_directory: "/tmp".to_string(),
-            status: ProcessStatus::Running { pid: 12345 },
+            status: ProcessStatus::Running {
+                pid: 12345,
+                started_at: 0,
+            },
         };
 
         let view = ProcessView::from(&process);
