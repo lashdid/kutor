@@ -7,6 +7,8 @@ export interface Process {
   working_directory: string
   status: ProcessStatus
   error_message: string | null
+  memory_bytes: number | null
+  uptime_secs: number | null
 }
 
 export interface CreateProcessParams {
