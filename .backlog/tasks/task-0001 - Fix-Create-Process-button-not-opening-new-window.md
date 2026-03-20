@@ -1,9 +1,10 @@
 ---
 id: TASK-0001
 title: Fix "Create Process" button not opening new window
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-03-20 03:05'
+updated_date: '2026-03-20 03:06'
 labels:
   - bug
   - ui
