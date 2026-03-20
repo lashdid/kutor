@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add memory usage anduptime columns to the process table, displaying real-time metrics for running processes.
+**Goal:** Add memory usage and uptime columns to the process table, displaying real-time metrics for running processes.
 
 **Architecture:** Store `started_at` timestamp in `ProcessStatus::Running` variant. On each `get_all_processes` call, use `sysinfo` crate to query memory by PID and calculate uptime. Frontend formats and displays values.
 
