@@ -22,6 +22,8 @@ export function ProcessTable() {
           <th>Name</th>
           <th>Status</th>
           <th>Directory</th>
+          <th>Memory</th>
+          <th>Uptime</th>
           <th>Actions</th>
         </tr>
       </thead>
