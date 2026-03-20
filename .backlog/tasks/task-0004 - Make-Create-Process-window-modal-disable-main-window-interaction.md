@@ -4,7 +4,7 @@ title: Make Create Process window modal - disable main window interaction
 status: Done
 assignee: []
 created_date: '2026-03-20 08:20'
-updated_date: '2026-03-20 08:26'
+updated_date: '2026-03-20 08:30'
 labels:
   - ux
   - windows
@@ -62,6 +62,12 @@ Implemented: Added `parent` option to WebviewWindow in src/pages/home.tsx:13
 Build passed successfully
 
 Windows will automatically play 'ding' sound when clicking disabled parent window
+
+Updated approach: UsesetEnabled(false) on main window when child opens,setEnabled(true) when child closes
+
+Modified home.tsx to disable main window and handle error case
+
+Modified create-process.tsx to re-enable main window before closing
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
