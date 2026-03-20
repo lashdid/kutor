@@ -4,7 +4,7 @@ title: Make Create Process window modal - disable main window interaction
 status: In Progress
 assignee: []
 created_date: '2026-03-20 08:20'
-updated_date: '2026-03-20 08:24'
+updated_date: '2026-03-20 08:26'
 labels:
   - ux
   - windows
@@ -53,3 +53,13 @@ When the Create Process window is open, users should not be able to interact wit
 ### Verification
 - Build and test on Windows to confirm modal behavior and automatic warning sound
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implemented: Added `parent` option to WebviewWindow in src/pages/home.tsx:13
+
+Build passed successfully
+
+Windows will automatically play 'ding' sound when clicking disabled parent window
+<!-- SECTION:NOTES:END -->
