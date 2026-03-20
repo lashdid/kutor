@@ -24,5 +24,9 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Tool caches
+.opencode/
+
 # Misc
 nul
+package-lock.json
