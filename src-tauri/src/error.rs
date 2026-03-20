@@ -17,11 +17,20 @@ pub enum KutorError {
 
     #[error("IO error: {0}")]
     IoError(String),
+
+    #[error("Serialization error: {0}")]
+    SerializationError(String),
 }
 
 impl From<std::io::Error> for KutorError {
     fn from(err: std::io::Error) -> Self {
         KutorError::IoError(err.to_string())
+    }
+}
+
+impl From<serde_json::Error> for KutorError {
+    fn from(err: serde_json::Error) -> Self {
+        KutorError::SerializationError(err.to_string())
     }
 }
 

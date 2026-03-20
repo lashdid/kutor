@@ -183,7 +183,17 @@ impl ProcessManager {
         }
 
         if let Some(mut child) = self.child_processes.remove(id) {
+            let pid = child.id();
+
+            #[cfg(target_os = "windows")]
+            {
+                let _ = std::process::Command::new("taskkill")
+                    .args(["/F", "/T", "/PID", &pid.to_string()])
+                    .status();
+            }
+
             let _ = child.kill();
+            let _ = child.wait();
         }
 
         process.status = ProcessStatus::Stopped;
