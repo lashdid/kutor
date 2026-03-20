@@ -122,22 +122,27 @@ Replace the From implementation (lines 35-52):
 ```rust
 impl From<&Process> for ProcessView {
     fn from(process: &Process) -> Self {
-        let (status, error_message, memory_bytes, uptime_secs) = match &process.status {
-            ProcessStatus::Stopped => ("stopped".to_string(), None, None, None),
-            ProcessStatus::Crashed { error } => ("crashed".to_string(), Some(error.clone()), None, None),
-            ProcessStatus::Running { pid: _, started_at: _ } => ("running".to_string(), None, None, None),};ProcessView {
+        let (status, error_message) = match &process.status {
+            ProcessStatus::Stopped => ("stopped".to_string(), None),
+            ProcessStatus::Crashed { error } => ("crashed".to_string(), Some(error.clone())),
+            ProcessStatus::Running { pid: _, started_at: _ } => ("running".to_string(), None),
+        };
+
+        ProcessView {
             id: process.id.clone(),
             name: process.name.clone(),
             command: process.command.clone(),
-            work_directory: process.working_directory.clone(),
+            working_directory: process.working_directory.clone(),
             status,
             error_message,
-            memory_bytes,
-            uptime_secs,
+            memory_bytes: None,
+            uptime_secs: None,
         }
     }
 }
 ```
+
+Note: This initial implementation sets `memory_bytes` and `uptime_secs` to `None`. Task 4 will add the logic to query these values for running processes.
 
 - [ ] **Step 6: Verify backend compiles**
 
@@ -527,7 +532,132 @@ git commit -m "feat(frontend): display memory and uptime in process row"
 
 ---
 
-### Task 10: Integration Testing
+### Task 10: Add Backend Unit Tests
+
+**Files:**
+- Modify: `src-tauri/src/process_manager.rs`
+
+- [ ] **Step 1: Add test for ProcessView with metrics fields**
+
+Add to the existing tests module (after line 255):
+```rust
+#[test]
+fn test_process_view_with_metrics() {
+    let process = Process {
+        id: "test-id".to_string(),
+        name: "Test Process".to_string(),
+        command: "echo test".to_string(),
+        working_directory: "/tmp".to_string(),
+        status: ProcessStatus::Running { pid: 12345, started_at: 1000000 },
+    };
+
+    let view = ProcessView::from(&process);
+    assert_eq!(view.status, "running");
+    assert_eq!(view.id, "test-id");
+    assert!(view.memory_bytes.is_none()); // Not queried in From impl
+    assert!(view.uptime_secs.is_none()); // Not queried in From impl
+}
+```
+
+- [ ] **Step 2: Run tests**
+
+Run: `cd src-tauri && cargo test`
+Expected: All tests pass
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src-tauri/src/process_manager.rs
+git commit -m "test(backend): add test for ProcessView with metrics fields"
+```
+
+---
+
+### Task 11: Add Frontend Unit Tests
+
+**Files:**
+- Create: `src/utils/format.test.ts`
+
+- [ ] **Step 1: Create test file**
+
+Create file `src/utils/format.test.ts`:
+```typescript
+import { describe, it, expect } from 'vitest'
+import { formatMemory, formatUptime } from './format'
+
+describe('formatMemory', () => {
+  it('returns dash for null', () => {
+    expect(formatMemory(null)).toBe('-')
+  })
+
+  it('formats bytes', () => {
+    expect(formatMemory(512)).toBe('512.0 B')
+  })
+
+  it('formats kilobytes', () => {
+    expect(formatMemory(1024)).toBe('1.0 KB')
+    expect(formatMemory(1536)).toBe('1.5 KB')
+  })
+
+  it('formats megabytes', () => {
+    expect(formatMemory(1048576)).toBe('1.0 MB')
+  })
+
+  it('formats gigabytes', () => {
+    expect(formatMemory(1073741824)).toBe('1.0 GB')
+  })
+})
+
+describe('formatUptime', () => {
+  it('returns dash for null', () => {
+    expect(formatUptime(null)).toBe('-')
+  })
+
+  it('formats seconds only', () => {
+    expect(formatUptime(45)).toBe('00:00:45')
+  })
+
+  it('formats minutes and seconds', () => {
+    expect(formatUptime(125)).toBe('00:02:05')
+  })
+
+  it('formats hours, minutes, and seconds', () => {
+    expect(formatUptime(3661)).toBe('01:01:01')
+  })
+})
+```
+
+- [ ] **Step 2: Verify test setup**
+
+Note: This project uses vitest. If not installed, add to package.json:
+```json
+"devDependencies": {
+  "vitest": "^1.0.0"
+}
+```
+
+Add test script to package.json:
+```json
+"scripts": {
+  "test": "vitest run"
+}
+```
+
+- [ ] **Step 3: Run tests**
+
+Run: `npm test`
+Expected: All tests pass
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/utils/format.test.ts package.json
+git commit -m "test(frontend): add unit tests for format utilities"
+```
+
+---
+
+### Task 12: Integration Testing
 
 **Files:**
 - None (manual testing)
