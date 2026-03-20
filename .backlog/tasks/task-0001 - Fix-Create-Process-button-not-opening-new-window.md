@@ -4,7 +4,7 @@ title: Fix "Create Process" button not opening new window
 status: Done
 assignee: []
 created_date: '2026-03-20 03:05'
-updated_date: '2026-03-20 03:08'
+updated_date: '2026-03-20 03:11'
 labels:
   - bug
   - ui
@@ -77,12 +77,17 @@ The "Create Process" button is not triggering the action to open a new window wh
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
 Fixed the "Create Process" button not opening new window by adding Tauri v2 capabilities.
 
-**Root Cause:** Tauri v2 requires explicit permissions for dynamic window creation. The app was missing the `core:webview:allow-create` and `core:window:allow-create` permissions.
+**Issue 1 (Initial fix):** Used wrong permission name `core:webview:allow-create`
+**Issue 2 (Correct fix):** Changed to correct permission `core:webview:allow-create-webview-window`
 
-**Solution:** Created `src-tauri/capabilities/default.json` with the required permissions for window/webview creation.
+**Root Cause:** Tauri v2 requires explicit permissions for dynamic window creation. The permission names follow a specific naming convention.
+
+**Solution:** Created `src-tauri/capabilities/default.json` with:
+- `core:window:allow-create`
+- `core:webview:allow-create-webview-window`
 
 **Files Changed:**
 - `src-tauri/capabilities/default.json` (new file)
 
-**Verification:** Build passed (TypeScript + Vite).
+**Verification:** Tauri build passed ✓
 <!-- SECTION:FINAL_SUMMARY:END -->
