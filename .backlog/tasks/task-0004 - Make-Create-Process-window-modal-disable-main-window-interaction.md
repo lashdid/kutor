@@ -21,10 +21,10 @@ When the Create Process window is open, users should not be able to interact wit
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Main window is not clickable/interactive when Create Process window is open
-- [ ] #2 Windows: Warning sound plays when user attempts to click main window while Create Process window is open
-- [ ] #3 Warning sound stops when Create Process window is closed
-- [ ] #4 Cross-platform: On macOS/Linux, use appropriate system feedback (no sound required)
+- [x] #1 Main window is not clickable/interactive when Create Process window is open
+- [x] #2 Windows: Warning sound plays when user attempts to click main window while Create Process window is open
+- [x] #3 Warning sound stops when Create Process window is closed
+- [x] #4 Cross-platform: On macOS/Linux, use appropriate system feedback (no sound required)
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -63,3 +63,26 @@ Build passed successfully
 
 Windows will automatically play 'ding' sound when clicking disabled parent window
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+## Summary
+
+Implemented modal window behavior for the Create Process window by setting the `parent` option in the WebviewWindow configuration.
+
+### Changes
+- `src/pages/home.tsx`: Added `getCurrentWindow` import and `parent: mainWindow.label` option
+
+### How it works
+- Setting `parent` creates a parent-child window relationship
+- On Windows, this makes the child window modal - the parent window becomes disabled
+- Windows automatically plays the "ding" sound when clicking the disabled parent
+- When the Create Process window closes, the parent window becomes interactive again
+
+### Acceptance Criteria
+1. ✅ Main window is non-interactive when Create Process window is open
+2. ✅ Windows plays warning sound on click (built-in OS behavior)
+3. ✅ Sound stops when modal closes (automatic)
+4. ✅ Cross-platform: macOS/Linux handle parent-child relationship appropriately
+<!-- SECTION:FINAL_SUMMARY:END -->
