@@ -356,6 +356,26 @@ mod tests {
         assert_eq!(view.status, "running");
         assert_eq!(view.id, "test-id");
     }
+
+    #[test]
+    fn test_process_view_with_metrics() {
+        let process = Process {
+            id: "test-id".to_string(),
+            name: "Test Process".to_string(),
+            command: "echo test".to_string(),
+            working_directory: "/tmp".to_string(),
+            status: ProcessStatus::Running {
+                pid: 12345,
+                started_at: 1000000,
+            },
+        };
+
+        let view = ProcessView::from(&process);
+        assert_eq!(view.status, "running");
+        assert_eq!(view.id, "test-id");
+        assert!(view.memory_bytes.is_none());
+        assert!(view.uptime_secs.is_none());
+    }
 }
 
 #[cfg(test)]
