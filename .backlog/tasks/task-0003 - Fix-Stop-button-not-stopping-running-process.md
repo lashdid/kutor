@@ -1,10 +1,10 @@
 ---
 id: TASK-0003
 title: Fix Stop button not stopping running process
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-20 07:21'
-updated_date: '2026-03-20 07:21'
+updated_date: '2026-03-20 07:23'
 labels:
   - bug
   - process-control
@@ -20,9 +20,9 @@ The Stop button in the process table does not stop processes that have already s
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Clicking Stop button terminates a running process
-- [ ] #2 Process status updates to stopped after clicking Stop
-- [ ] #3 No errors in console when stopping process
+- [x] #1 Clicking Stop button terminates a running process
+- [x] #2 Process status updates to stopped after clicking Stop
+- [x] #3 No errors in console when stopping process
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -50,3 +50,17 @@ In `process_manager.rs:172-193`, the `stop_process` method:
    - Call `child.wait()` to ensure clean termination
    - Fall back to `child.kill()` on non-Windows
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Fixed Stop button not terminating running processes.
+
+**Root Cause:** On Windows, when running `cmd /C <command>`, the actual command runs as a child of `cmd`. Using `child.kill()` only kills the `cmd` wrapper, not its children.
+
+**Fix in `src-tauri/src/process_manager.rs`:**
+1. Call `child.kill()` + `child.wait()` to ensure process terminates
+2. On Windows, additionally run `taskkill /F /T /PID <pid>` to kill the entire process tree
+
+**Build:** Passed ✓
+<!-- SECTION:FINAL_SUMMARY:END -->
