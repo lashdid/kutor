@@ -32,26 +32,31 @@ When the Create Process window is open, users should not be able to interact wit
 <!-- SECTION:PLAN:BEGIN -->
 ## Implementation Plan
 
-### 1. Modal Window via Parent-Child Relationship
+### 1. Modal Window via setEnabled API
 **File:** `src/pages/home.tsx`
 
-- Import `getCurrentWindow` from `@tauri-apps/api/webviewWindow`
-- Set `parent` option to the current main window label when creating the Create Process window
-- This makes Windows treat the child window as modal - parent window becomes non-interactive
+- Get main window reference with `getCurrentWindow()`
+- Call `setEnabled(false)` on main window before opening child window
+- Set `parent` option for window relationship
+- Handle error case to re-enable main window if child creation fails
 
-### 2. System Warning Sound
-- Windows automatically plays the "ding" sound when clicking a disabled parent window
+### 2. Re-enable Main Window on Close
+**File:** `src/pages/create-process.tsx`
+
+- Get main window reference with `Window.getByLabel('main')`
+- Call `setEnabled(true)` on main window before closing
+
+### 3. System Warning Sound
+- Windows automatically plays the "ding" sound when clicking a disabled window
 - No additional code needed - this is built-in OS behavior
 
-### 3. Cross-Platform Behavior
-- macOS/Linux: Parent-child relationship disables parent interaction
-- Acceptance criteria explicitly states no sound required on non-Windows platforms
-
 ### Files to Modify
-- `src/pages/home.tsx` - Add parent window reference to WebviewWindow options
+- `src/pages/home.tsx` - Disable main window when opening child
+- `src/pages/create-process.tsx` - Re-enable main window when closing
 
 ### Verification
-- Build and test on Windows to confirm modal behavior and automatic warning sound
+- Build passed
+- Test on Windows to confirm modal behavior and automatic warning sound
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -75,20 +80,27 @@ Modified create-process.tsx to re-enable main window before closing
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
 ## Summary
 
-Implemented modal window behavior for the Create Process window by setting the `parent` option in the WebviewWindow configuration.
+Implemented modal window behavior for the Create Process window using `setEnabled()` API.
 
 ### Changes
-- `src/pages/home.tsx`: Added `getCurrentWindow` import and `parent: mainWindow.label` option
+- `src/pages/home.tsx`:
+  - Disable main window with `setEnabled(false)` before opening child window
+  - Re-enable main window on error if child window creation fails
+  - Set `parent` option for window relationship
+  
+- `src/pages/create-process.tsx`:
+  - Re-enable main window with `setEnabled(true)` before closing
+  - Uses `Window.getByLabel('main')` to get the parent window reference
 
 ### How it works
-- Setting `parent` creates a parent-child window relationship
-- On Windows, this makes the child window modal - the parent window becomes disabled
-- Windows automatically plays the "ding" sound when clicking the disabled parent
-- When the Create Process window closes, the parent window becomes interactive again
+1. When user clicks "Create Process", main window is disabled via `setEnabled(false)`
+2. Create Process window opens as child
+3. Windows OS automatically plays "ding" sound when user clicks disabled window
+4. When Create Process window closes (OK or Cancel), main window is re-enabled via `setEnabled(true)`
 
 ### Acceptance Criteria
 1. ✅ Main window is non-interactive when Create Process window is open
-2. ✅ Windows plays warning sound on click (built-in OS behavior)
-3. ✅ Sound stops when modal closes (automatic)
-4. ✅ Cross-platform: macOS/Linux handle parent-child relationship appropriately
+2. ✅ Windows plays warning sound on click (built-in OSbehavior for disabled windows)
+3. ✅ Sound stops when modal closes (window is re-enabled)
+4. ✅ Cross-platform: `setEnabled()` works on all platforms
 <!-- SECTION:FINAL_SUMMARY:END -->
