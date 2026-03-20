@@ -1,9 +1,10 @@
 ---
 id: TASK-0004
 title: Make Create Process window modal - disable main window interaction
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-03-20 08:20'
+updated_date: '2026-03-20 08:21'
 labels:
   - ux
   - windows
