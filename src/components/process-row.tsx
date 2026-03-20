@@ -1,4 +1,5 @@
 import type { Process } from '../types/process'
+import { formatMemory, formatUptime } from '../utils/format'
 
 interface ProcessRowProps {
   process: Process
@@ -21,6 +22,8 @@ export function ProcessRow({ process, onStart, onStop, onRestart, onDelete }: Pr
         {process.error_message && <span title={process.error_message}> (error)</span>}
       </td>
       <td>{process.working_directory}</td>
+      <td>{formatMemory(process.memory_bytes)}</td>
+      <td>{formatUptime(process.uptime_secs)}</td>
       <td>
         <button onClick={() => onStart(process.id)} disabled={!isStopped && !isCrashed}>
           Start
