@@ -71,7 +71,7 @@ let now_millis = SystemTime::now()
     .duration_since(UNIX_EPOCH)
     .unwrap()
     .as_millis() as u64;
-letuptime_secs = (now_millis.saturating_sub(started_at)) / 1000;
+let uptime_secs = (now_millis.saturating_sub(started_at)) / 1000;
 ```
 
 #### Dependencies
