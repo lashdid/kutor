@@ -4,7 +4,7 @@ title: Fix "Create Process" button not opening new window
 status: In Progress
 assignee: []
 created_date: '2026-03-20 03:05'
-updated_date: '2026-03-20 03:06'
+updated_date: '2026-03-20 03:07'
 labels:
   - bug
   - ui
@@ -41,3 +41,33 @@ The "Create Process" button is not triggering the action to open a new window wh
 1. Create `src-tauri/capabilities/default.json` granting `core:webview:allow-create` and `core:window:allow-create` permissions
 2. Reference the capabilities in `tauri.conf.json` (if not auto-detected)
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Implementation Complete
+
+**Created:** `src-tauri/capabilities/default.json`
+
+**Permissions granted:**
+
+- `core:window:default` - default window permissions
+
+- `core:webview:default` - default webview permissions
+
+- `core:window:allow-create` - allows creating new windows
+
+- `core:webview:allow-create` - allows creating new webviews
+
+- `core:event:default` - event handling
+
+- `core:app:default` - app permissions
+
+- `core:image:default` - image permissions
+
+- `dialog:default` - dialog plugin permissions
+
+- `shell:allow-open` - shell open permission
+
+**Build:** Passed ✓
+<!-- SECTION:NOTES:END -->
