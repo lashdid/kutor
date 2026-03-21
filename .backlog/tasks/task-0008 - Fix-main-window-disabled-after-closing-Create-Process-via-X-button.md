@@ -1,7 +1,7 @@
 ---
 id: TASK-0008
 title: Fix main window disabled after closing Create Process via X button
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-21 04:01'
 updated_date: '2026-03-21 04:04'
@@ -74,3 +74,24 @@ Simplified handleClose() - just closes window, re-enable logic now handled by li
 
 Build passed successfully
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+## Summary
+
+Fixed bug where main window remained disabled when Create Process window was closed via X button.
+
+### Changes
+- `src/pages/create-process.tsx`:
+  - Added `useEffect` hook with `onCloseRequested` listener that re-enables main window on any close event
+  - Simplified `handleClose()` to just close the window (re-enable logic moved to listener)
+  - Cleanup handler unregisters listener on unmount
+
+### How it works
+1. Component mounts → registers `onCloseRequested` listener
+2. Any close attempt (X button, OK button, Cancel button) triggers the listener
+3. Listener re-enables main window via `Window.getByLabel('main')`
+4. Window closes normally
+5. Listener cleanup on unmount prevents memory leaks
+<!-- SECTION:FINAL_SUMMARY:END -->
