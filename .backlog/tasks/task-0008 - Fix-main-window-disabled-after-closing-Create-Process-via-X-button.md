@@ -4,7 +4,7 @@ title: Fix main window disabled after closing Create Process via X button
 status: Done
 assignee: []
 created_date: '2026-03-21 04:01'
-updated_date: '2026-03-21 04:04'
+updated_date: '2026-03-21 04:31'
 labels:
   - bug
   - windows
@@ -94,4 +94,12 @@ Fixed bug where main window remained disabled when Create Process window was clo
 3. Listener re-enables main window via `Window.getByLabel('main')`
 4. Window closes normally
 5. Listener cleanup on unmount prevents memory leaks
+
+**Fix V2:** Changed from onCloseRequested to listen('destroyed') event
+
+- onCloseRequested was blocking window close
+
+- Now uses 'destroyed' event which fires after window is destroyed
+
+- Re-enables main window regardless of close method (X button, OK, Cancel)
 <!-- SECTION:FINAL_SUMMARY:END -->
