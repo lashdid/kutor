@@ -1,9 +1,10 @@
 ---
 id: TASK-0008
 title: Fix main window disabled after closing Create Process via X button
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-03-21 04:01'
+updated_date: '2026-03-21 04:02'
 labels:
   - bug
   - windows
