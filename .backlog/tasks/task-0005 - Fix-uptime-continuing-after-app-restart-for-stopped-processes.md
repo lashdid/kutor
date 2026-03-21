@@ -1,10 +1,10 @@
 ---
 id: TASK-0005
 title: Fix uptime continuing after app restart for stopped processes
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-21 02:09'
-updated_date: '2026-03-21 02:09'
+updated_date: '2026-03-21 02:10'
 labels:
   - bug
   - backend
@@ -31,3 +31,13 @@ When the app restarts, processes that were running when the app closed still sho
 4. Call `reconcile_processes` after `load_from_disk` in app startup
 5. Save updated state to disk
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added `reconcile_processes` method to ProcessManager that checks if PIDs marked as Running are still alive using sysinfo. If a PID is not found, the process status is updated to Stopped. This method is called automatically on app startup after loading processes from disk.
+
+Files changed:
+- `src-tauri/src/process_manager.rs`: Added `reconcile_processes` method
+- `src-tauri/src/lib.rs`: Call `reconcile_processes` after `load_from_disk`
+<!-- SECTION:FINAL_SUMMARY:END -->
