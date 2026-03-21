@@ -1,9 +1,10 @@
 ---
 id: TASK-0007
 title: Add PID column to process table after Name column
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-03-21 02:37'
+updated_date: '2026-03-21 02:37'
 labels: []
 dependencies: []
 priority: medium
