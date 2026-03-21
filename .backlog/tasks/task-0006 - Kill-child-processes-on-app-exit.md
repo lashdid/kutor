@@ -1,9 +1,10 @@
 ---
 id: TASK-0006
 title: Kill child processes on app exit
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-03-21 02:16'
+updated_date: '2026-03-21 02:16'
 labels:
   - bug
   - backend
