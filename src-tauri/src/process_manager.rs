@@ -165,6 +165,35 @@ impl ProcessManager {
         Ok(())
     }
 
+    pub fn reconcile_processes(&mut self) -> Result<(), KutorError> {
+        use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System};
+
+        let mut system = System::new();
+        let mut needs_save = false;
+
+        for process in self.processes.values_mut() {
+            if let ProcessStatus::Running { pid, .. } = &process.status {
+                system.refresh_processes_specifics(
+                    ProcessesToUpdate::All,
+                    true,
+                    ProcessRefreshKind::nothing(),
+                );
+
+                let pid = Pid::from_u32(*pid);
+                if system.process(pid).is_none() {
+                    process.status = ProcessStatus::Stopped;
+                    needs_save = true;
+                }
+            }
+        }
+
+        if needs_save {
+            self.save_to_disk()?;
+        }
+
+        Ok(())
+    }
+
     #[cfg(target_os = "windows")]
     pub fn start_process(&mut self, id: &str) -> Result<(), KutorError> {
         let process = self
@@ -277,6 +306,14 @@ impl ProcessManager {
         } else {
             Err(KutorError::ProcessNotFound(id.to_string()))
         }
+    }
+
+    pub fn stop_all_processes(&mut self) -> Result<(), KutorError> {
+        let ids: Vec<String> = self.processes.keys().cloned().collect();
+        for id in ids {
+            let _ = self.stop_process(&id);
+        }
+        Ok(())
     }
 
     pub fn get_process(&mut self, id: &str) -> Result<ProcessView, KutorError> {
