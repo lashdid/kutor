@@ -1,5 +1,5 @@
 import { open } from '@tauri-apps/plugin-dialog'
-import { getCurrentWindow } from '@tauri-apps/api/window'
+import { getCurrentWindow, Window } from '@tauri-apps/api/window'
 import { useCreateProcess } from '../hooks/use-create-process'
 import { useState } from 'react'
 
@@ -19,6 +19,14 @@ export default function CreateProcess() {
     }
   }
 
+  const handleClose = async () => {
+    const mainWindow = await Window.getByLabel('main')
+    if (mainWindow) {
+      await mainWindow.setEnabled(true)
+    }
+    await getCurrentWindow().close()
+  }
+
   const handleOk = () => {
     if (!name || !command || !workingDirectory) {
       alert('All fields are required')
@@ -29,7 +37,7 @@ export default function CreateProcess() {
       { name, command, working_directory: workingDirectory },
       {
         onSuccess: () => {
-          getCurrentWindow().close()
+          handleClose()
         },
         onError: (error) => {
           alert(`Failed to create process: ${error}`)
@@ -39,7 +47,7 @@ export default function CreateProcess() {
   }
 
   const handleCancel = () => {
-    getCurrentWindow().close()
+    handleClose()
   }
 
   return (
