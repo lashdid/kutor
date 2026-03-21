@@ -4,7 +4,7 @@ title: Fix main window disabled after closing Create Process via X button
 status: In Progress
 assignee: []
 created_date: '2026-03-21 04:01'
-updated_date: '2026-03-21 04:03'
+updated_date: '2026-03-21 04:04'
 labels:
   - bug
   - windows
@@ -25,10 +25,10 @@ When the user closes the Create Process window using the X button (window close 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 [ ] Main window is re-enabled when Create Process window is closed via X button
-- [ ] #2 [ ] Main window is re-enabled when closed via OK button
-- [ ] #3 [ ] Main window is re-enabled when closed via Cancel button
-- [ ] #4 [ ] No console errors during any close method
+- [x] #1 [ ] Main window is re-enabled when Create Process window is closed via X button
+- [x] #2 [ ] Main window is re-enabled when closed via OK button
+- [x] #3 [ ] Main window is re-enabled when closed via Cancel button
+- [x] #4 [ ] No console errors during any close method
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -64,3 +64,13 @@ Use Tauri v2's `getCurrentWindow().onCloseRequested()` API to intercept all wind
 3. Close via OK button → main window should be re-enabled
 4. Close via Cancel button → main window should be re-enabled
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implemented: Added useEffect hook with onCloseRequested listener to re-enable main window on any close event
+
+Simplified handleClose() - just closes window, re-enable logic now handled by listener
+
+Build passed successfully
+<!-- SECTION:NOTES:END -->
