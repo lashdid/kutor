@@ -26,3 +26,23 @@ On Windows, when the Create Process window is closed, the main window does not a
 - [ ] #1 When Create Process window closes, main window automatically receives focus on Windows
 - [ ] #2 Main window appears in foreground without user interaction
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+## Plan
+
+**Root cause**: In `home.tsx`, when the Create Process window closes, `mainWindow.setEnabled(true)` re-enables the main window but doesn't bring it to the foreground on Windows.
+
+**Fix**: Add `mainWindow.setFocus()` call after `setEnabled(true)` in the `tauri://destroyed` handler.
+
+**File to modify**: `src/pages/home.tsx`
+
+**Change**:
+```typescript
+webview.once('tauri://destroyed', async () => {
+  await mainWindow.setEnabled(true)
+  await mainWindow.setFocus()  // Add this line
+})
+```
+<!-- SECTION:PLAN:END -->
