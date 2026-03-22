@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2026-03-22 01:49'
-updated_date: '2026-03-22 01:55'
+updated_date: '2026-03-22 02:02'
 labels:
   - bug
   - windows
@@ -60,5 +60,10 @@ Added setAlwaysOnTop(true/false) workaround to force window to foreground
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Fixed main window not auto-focusing after Create Process window closes by adding `mainWindow.setFocus()` call after `setEnabled(true)` in the `tauri://destroyed` event handler in `src/pages/home.tsx`.
+Fixed main window not auto-focusing after Create Process window closes on Windows by:
+
+1. Adding `setFocus()` call after `setEnabled(true)` in the `tauri://destroyed` event handler in `src/pages/home.tsx`
+2. Adding `core:window:allow-set-focus` permission to `src-tauri/capabilities/default.json`
+
+The issue was twofold: the `setFocus()` call was missing, and the permission for the `setFocus` API was not granted.
 <!-- SECTION:FINAL_SUMMARY:END -->
