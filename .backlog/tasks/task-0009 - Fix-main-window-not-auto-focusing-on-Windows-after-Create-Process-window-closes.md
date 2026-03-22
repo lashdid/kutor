@@ -3,9 +3,10 @@ id: TASK-0009
 title: >-
   Fix main window not auto-focusing on Windows after Create Process window
   closes
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-03-22 01:49'
+updated_date: '2026-03-22 01:49'
 labels:
   - bug
   - windows
