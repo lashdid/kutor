@@ -2,16 +2,16 @@
 
 ## Overview
 
-Add a "Log" button to the process table that appears only when a process is running. When clicked, it opens a new window displaying real-time stdout/stderr output from that process.
+Add a "Log" button to the process table. When clicked, it opens a new window displaying real-time stdout/stderr output from that process. Logs persist after the process stops (cleared only on app restart or manual clear).
 
 ## Requirements
 
 ### Functional
-- Log button visible only for running processes
+- Log button always visible for all processes
 - Clicking Log opens a dedicated window for that process's output
 - Logs display stdout and stderr in real-time
 - Bounded buffer (10,000 lines) per process
-- Logs discarded when process stops
+- Logs persist after process stops until app restart
 
 ### Non-Functional
 - Minimal memory footprint via ring buffer
@@ -51,7 +51,7 @@ let child = std::process::Command::new(&process.command)
 - Spawn thread per process to read stdout/stderr
 - Append to ring buffer (evict oldest when full)
 - Emit Tauri event `process-output` with `{ process_id, line, stream }`
-- On process stop: clear buffer, stop capture thread
+- On process stop: stop capture thread (logs remain in buffer)
 
 **New commands:**
 ```rust
@@ -65,7 +65,7 @@ fn stream_process_logs(process_id: Uuid, window: Window)  // Subscribe window to
 ### Frontend (TypeScript/React)
 
 **ProcessRow.tsx:**
-- Add conditional Log button: `status === 'Running'`
+- Add Log button (always visible)
 - On click: create WebviewWindow with label `log-{process_id}`
 
 **ProcessLog.tsx (new):**
@@ -107,10 +107,10 @@ Append to ring buffer (max 10,000 lines)
 Process stopped
      │
      ▼
-Clear log buffer
+Stop capture thread (logs remain in buffer)
      │
      ▼
-Log window shows empty state
+User can still view logs until app restart
 ```
 
 ## Window Management
@@ -139,7 +139,6 @@ new WebviewWindow(`log-${process.id}`, {
 5. Frontend: Create ProcessLog.tsx component
 6. Frontend: Update routing in main.tsx
 7. Frontend: Add Log button to ProcessRow.tsx
-8. Backend: Clear logs on process stop
 
 ## Future Enhancements
 
