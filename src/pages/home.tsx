@@ -15,6 +15,7 @@ export default function Home() {
     })
     webview.once('tauri://destroyed', async () => {
       await mainWindow.setEnabled(true)
+      await mainWindow.setFocus()
     })
     await webview.once('tauri://created', () => {
       console.log('Create process window created')
