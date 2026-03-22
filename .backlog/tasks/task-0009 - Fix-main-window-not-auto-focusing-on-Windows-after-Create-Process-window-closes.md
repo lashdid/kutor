@@ -3,10 +3,10 @@ id: TASK-0009
 title: >-
   Fix main window not auto-focusing on Windows after Create Process window
   closes
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-22 01:49'
-updated_date: '2026-03-22 01:49'
+updated_date: '2026-03-22 01:50'
 labels:
   - bug
   - windows
@@ -46,3 +46,9 @@ webview.once('tauri://destroyed', async () => {
 })
 ```
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Fixed main window not auto-focusing after Create Process window closes by adding `mainWindow.setFocus()` call after `setEnabled(true)` in the `tauri://destroyed` event handler in `src/pages/home.tsx`.
+<!-- SECTION:FINAL_SUMMARY:END -->
