@@ -4,7 +4,7 @@ title: Fix main window disabled after closing Create Process via X button
 status: Done
 assignee: []
 created_date: '2026-03-21 04:01'
-updated_date: '2026-03-21 04:31'
+updated_date: '2026-03-22 01:48'
 labels:
   - bug
   - windows
@@ -80,26 +80,21 @@ Build passed successfully
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
 ## Summary
 
-Fixed bug where main window remained disabled when Create Process window was closed via X button.
+Fixed bug where main window remained disabled when Create Process window was closed via X button or Cancel button.
 
-### Changes
-- `src/pages/create-process.tsx`:
-  - Added `useEffect` hook with `onCloseRequested` listener that re-enables main window on any close event
-  - Simplified `handleClose()` to just close the window (re-enable logic moved to listener)
-  - Cleanup handler unregisters listener on unmount
+### Root Cause
+Multiple close event listener approaches blocked the window from closing:
+- `onCloseRequested()` blocked the close
+- `listen('close-requested')` didn't fire
+- `listen('tauri://close-requested')` blocked the close
 
-### How it works
-1. Component mounts → registers `onCloseRequested` listener
-2. Any close attempt (X button, OK button, Cancel button) triggers the listener
-3. Listener re-enables main window via `Window.getByLabel('main')`
-4. Window closes normally
-5. Listener cleanup on unmount prevents memory leaks
+### Solution
+Handle re-enable from the parent window side:
+- Parent window (`home.tsx`) listens for `tauri://destroyed` event on the child window
+- When child window closes (by any method), parent re-enables itself
+- Child window (`create-process.tsx`) just closes naturally, no special handling needed
 
-**Fix V2:** Changed from onCloseRequested to listen('destroyed') event
-
-- onCloseRequested was blocking window close
-
-- Now uses 'destroyed' event which fires after window is destroyed
-
-- Re-enables main window regardless of close method (X button, OK, Cancel)
+### Files Changed
+- `src/pages/home.tsx`: Added `tauri://destroyed` listener on child window
+- `src/pages/create-process.tsx`: Removed all close event listeners
 <!-- SECTION:FINAL_SUMMARY:END -->
