@@ -34,6 +34,7 @@ pub struct ProcessView {
     pub error_message: Option<String>,
     pub memory_bytes: Option<u64>,
     pub uptime_secs: Option<u64>,
+    pub pid: Option<u32>,
 }
 
 impl From<&Process> for ProcessView {
@@ -56,6 +57,7 @@ impl From<&Process> for ProcessView {
             error_message,
             memory_bytes: None,
             uptime_secs: None,
+            pid: None,
         }
     }
 }
@@ -107,25 +109,32 @@ impl ProcessManager {
         self.processes
             .values()
             .map(|process| {
-                let (status, error_message, memory_bytes, uptime_secs) = match &process.status {
-                    ProcessStatus::Stopped => ("stopped".to_string(), None, None, None),
+                let (status, error_message, memory_bytes, uptime_secs, pid) = match &process.status
+                {
+                    ProcessStatus::Stopped => ("stopped".to_string(), None, None, None, None),
                     ProcessStatus::Crashed { error } => {
-                        ("crashed".to_string(), Some(error.clone()), None, None)
+                        ("crashed".to_string(), Some(error.clone()), None, None, None)
                     }
                     ProcessStatus::Running { pid, started_at } => {
                         use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate};
 
-                        let pid = Pid::from_u32(*pid);
+                        let sysinfo_pid = Pid::from_u32(*pid);
                         self.system.refresh_processes_specifics(
-                            ProcessesToUpdate::Some(&[pid]),
+                            ProcessesToUpdate::Some(&[sysinfo_pid]),
                             true,
                             ProcessRefreshKind::nothing().with_memory(),
                         );
 
-                        let memory_bytes = self.system.process(pid).map(|p| p.memory());
+                        let memory_bytes = self.system.process(sysinfo_pid).map(|p| p.memory());
                         let uptime_secs = Some((now_millis.saturating_sub(*started_at)) / 1000);
 
-                        ("running".to_string(), None, memory_bytes, uptime_secs)
+                        (
+                            "running".to_string(),
+                            None,
+                            memory_bytes,
+                            uptime_secs,
+                            Some(*pid),
+                        )
                     }
                 };
 
@@ -138,6 +147,7 @@ impl ProcessManager {
                     error_message,
                     memory_bytes,
                     uptime_secs,
+                    pid,
                 }
             })
             .collect()
@@ -327,25 +337,31 @@ impl ProcessManager {
             .unwrap()
             .as_millis() as u64;
 
-        let (status, error_message, memory_bytes, uptime_secs) = match &process.status {
-            ProcessStatus::Stopped => ("stopped".to_string(), None, None, None),
+        let (status, error_message, memory_bytes, uptime_secs, pid) = match &process.status {
+            ProcessStatus::Stopped => ("stopped".to_string(), None, None, None, None),
             ProcessStatus::Crashed { error } => {
-                ("crashed".to_string(), Some(error.clone()), None, None)
+                ("crashed".to_string(), Some(error.clone()), None, None, None)
             }
             ProcessStatus::Running { pid, started_at } => {
                 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate};
 
-                let pid = Pid::from_u32(*pid);
+                let sysinfo_pid = Pid::from_u32(*pid);
                 self.system.refresh_processes_specifics(
-                    ProcessesToUpdate::Some(&[pid]),
+                    ProcessesToUpdate::Some(&[sysinfo_pid]),
                     true,
                     ProcessRefreshKind::nothing().with_memory(),
                 );
 
-                let memory_bytes = self.system.process(pid).map(|p| p.memory());
+                let memory_bytes = self.system.process(sysinfo_pid).map(|p| p.memory());
                 let uptime_secs = Some((now_millis.saturating_sub(*started_at)) / 1000);
 
-                ("running".to_string(), None, memory_bytes, uptime_secs)
+                (
+                    "running".to_string(),
+                    None,
+                    memory_bytes,
+                    uptime_secs,
+                    Some(*pid),
+                )
             }
         };
 
@@ -358,6 +374,7 @@ impl ProcessManager {
             error_message,
             memory_bytes,
             uptime_secs,
+            pid,
         })
     }
 }

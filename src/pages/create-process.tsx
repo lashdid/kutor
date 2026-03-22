@@ -1,5 +1,5 @@
 import { open } from '@tauri-apps/plugin-dialog'
-import { getCurrentWindow, Window } from '@tauri-apps/api/window'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useCreateProcess } from '../hooks/use-create-process'
 import { useState } from 'react'
 
@@ -20,10 +20,6 @@ export default function CreateProcess() {
   }
 
   const handleClose = async () => {
-    const mainWindow = await Window.getByLabel('main')
-    if (mainWindow) {
-      await mainWindow.setEnabled(true)
-    }
     await getCurrentWindow().close()
   }
 

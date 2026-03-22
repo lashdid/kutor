@@ -13,6 +13,9 @@ export default function Home() {
       height: 300,
       parent: mainWindow.label,
     })
+    webview.once('tauri://destroyed', async () => {
+      await mainWindow.setEnabled(true)
+    })
     await webview.once('tauri://created', () => {
       console.log('Create process window created')
     })

@@ -17,6 +17,7 @@ export function ProcessRow({ process, onStart, onStop, onRestart, onDelete }: Pr
   return (
     <tr>
       <td>{process.name}</td>
+      <td>{process.pid ?? '-'}</td>
       <td style={{ color: isRunning ? 'green' : isCrashed ? 'red' : 'gray' }}>
         {process.status}
         {process.error_message && <span title={process.error_message}> (error)</span>}

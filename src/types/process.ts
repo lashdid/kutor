@@ -9,6 +9,7 @@ export interface Process {
   error_message: string | null
   memory_bytes: number | null
   uptime_secs: number | null
+  pid: number | null
 }
 
 export interface CreateProcessParams {

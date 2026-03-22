@@ -20,6 +20,7 @@ export function ProcessTable() {
       <thead>
         <tr>
           <th>Name</th>
+          <th>PID</th>
           <th>Status</th>
           <th>Directory</th>
           <th>Memory</th>
