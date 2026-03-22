@@ -24,8 +24,13 @@ Add a "Log" button to the process table that appears only when a process is runn
 
 **ProcessLog struct:**
 ```rust
+struct LogLine {
+    content: String,
+    stream: LogStream,  // "stdout" | "stderr"
+}
+
 struct ProcessLog {
-    buffer: VecDeque<String>,  // Ring buffer, max 10,000 lines
+    buffer: VecDeque<LogLine>,  // Ring buffer, max 10,000 lines
 }
 
 // In ProcessManager
@@ -51,7 +56,7 @@ let child = std::process::Command::new(&process.command)
 **New commands:**
 ```rust
 #[tauri::command]
-fn get_process_logs(process_id: Uuid, state: State) -> Result<Vec<String>, String>
+fn get_process_logs(process_id: Uuid, state: State) -> Result<Vec<LogLine>, String>
 
 #[tauri::command]
 fn stream_process_logs(process_id: Uuid, window: Window)  // Subscribe window to events
@@ -112,7 +117,7 @@ Log window shows empty state
 
 **Log window creation:**
 ```typescript
-new WebviewWindow(`log_${process.id}`, {
+new WebviewWindow(`log-${process.id}`, {
   url: '/',
   title: `Log - ${process.name}`,
   width: 800,
