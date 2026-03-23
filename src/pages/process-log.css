@@ -1,0 +1,29 @@
+.process-log-container {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  padding: 8px;
+  height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.process-log-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.process-log-line.stdout {
+  color: #d4d4d4;
+}
+
+.process-log-line.stderr {
+  color: #f14c4c;
+}
+
+.process-log-empty {
+  color: #808080;
+  font-style: italic;
+}
