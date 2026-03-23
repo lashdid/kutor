@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import type { Process, CreateProcessParams } from '../types/process'
+import type { Process, CreateProcessParams, LogLine } from '../types/process'
 
 export async function createProcess(params: CreateProcessParams): Promise<string> {
   return invoke<string>('create_process', {
@@ -27,4 +27,8 @@ export async function deleteProcess(id: string): Promise<void> {
 
 export async function getAllProcesses(): Promise<Process[]> {
   return invoke('get_all_processes')
+}
+
+export async function getProcessLogs(id: string): Promise<LogLine[]> {
+  return invoke<LogLine[]>('get_process_logs', { id })
 }
