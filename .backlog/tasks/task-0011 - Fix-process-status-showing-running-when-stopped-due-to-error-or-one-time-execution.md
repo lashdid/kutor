@@ -3,7 +3,7 @@ id: TASK-0011
 title: >-
   Fix process status showing "running" when stopped due to error or one-time
   execution
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-23 10:47'
 updated_date: '2026-03-23 10:57'
@@ -86,3 +86,44 @@ Current flow:
 
 - Start button now enabled for completed processes
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+## Summary
+
+Fixed process status not updating when processes terminate due to error or completion.
+
+### Changes Made
+
+**Rust (src-tauri/src/process_manager.rs):**
+1. Added `ProcessStatus::Completed` variant to the enum
+2. Added `self_ref: Option<Weak<Mutex<ProcessManager>>>` field to enable monitoring threads to access ProcessManager
+3. Added `set_self_ref()` method to set the weak reference after Arc creation
+4. Updated all `ProcessView` conversions to handle `Completed` status
+5. Added monitoring thread in `start_process()` for both Windows and non-Windows platforms:
+   - Polls `child.try_wait()` every 100ms
+   - On process exit: exit code 0 → `Completed`, non-zero → `Crashed { error }`
+   - Emits `process-status-change` event to frontend
+   - Saves status to disk
+   - Handles graceful thread exit when process is removed by `stop_process()`
+
+**Rust (src-tauri/src/lib.rs):**
+- Updated setup to call `set_self_ref()` after creating the Arc
+
+**TypeScript (src/types/process.ts):**
+- Added 'completed' to ProcessStatus type union
+
+**TypeScript (src/components/process-row.tsx):**
+- Added `isCompleted` check
+- Updated `getStatusColor()` to show blue for completed status
+- Start button now enabled for completed processes (can restart a completed script)
+
+### Behavior
+- **Running** → Process is actively executing
+- **Completed** → Process exited with code 0 (success)
+- **Crashed** → Process exited with non-zero code (error)
+- **Stopped** → Process was manually stopped by user
+
+The frontend already polls every 1 second via TanStack Query's refetchInterval, so status updates are reflected within 1 second of process termination.
+<!-- SECTION:FINAL_SUMMARY:END -->
