@@ -3,9 +3,10 @@ id: TASK-0011
 title: >-
   Fix process status showing "running" when stopped due to error or one-time
   execution
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-03-23 10:47'
+updated_date: '2026-03-23 10:48'
 labels:
   - bug
   - status
