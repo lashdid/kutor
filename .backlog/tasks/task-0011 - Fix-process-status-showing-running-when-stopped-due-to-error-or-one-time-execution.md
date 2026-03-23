@@ -6,7 +6,7 @@ title: >-
 status: In Progress
 assignee: []
 created_date: '2026-03-23 10:47'
-updated_date: '2026-03-23 10:50'
+updated_date: '2026-03-23 10:57'
 labels:
   - bug
   - status
@@ -24,10 +24,10 @@ The status should accurately reflect the actual state of the process - when it s
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Process status shows 'stopped' or 'error' when process terminates due to error
-- [ ] #2 Process status shows 'completed' when one-time execution script finishes successfully
-- [ ] #3 Status no longer shows 'running' for terminated processes
-- [ ] #4 Status updates in real-time when process state changes
+- [x] #1 Process status shows 'stopped' or 'error' when process terminates due to error
+- [x] #2 Process status shows 'completed' when one-time execution script finishes successfully
+- [x] #3 Status no longer shows 'running' for terminated processes
+- [x] #4 Status updates in real-time when process state changes
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -64,3 +64,25 @@ Current flow:
    - When manually stopped, set status to `Stopped` (existing behavior)
    - Monitoring thread detects child_processes removal and exits cleanly
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Implementation complete
+
+- Added ProcessStatus::Completed variant to Rust enum
+
+- Added 'completed' to TypeScript ProcessStatus type
+
+- Updated ProcessView conversions for Completed status
+
+- Added monitoring thread in start_process (both Windows and non-Windows)
+
+- Monitoring thread uses try_wait() to poll for process exit every 100ms
+
+- On exit: exit_code 0 → Completed, non-zero → Crashed with error message
+
+- Updated process-row.tsx to handle 'completed' status (blue color)
+
+- Start button now enabled for completed processes
+<!-- SECTION:NOTES:END -->
