@@ -2,10 +2,13 @@ use crate::error::KutorError;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fs;
+use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::Child;
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use sysinfo::System;
+use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,7 +95,8 @@ pub struct ProcessManager {
     child_processes: HashMap<String, Child>,
     config_path: PathBuf,
     system: System,
-    logs: HashMap<String, ProcessLog>,
+    logs: Arc<Mutex<HashMap<String, ProcessLog>>>,
+    app_handle: Option<AppHandle>,
 }
 
 impl ProcessManager {
@@ -102,8 +106,13 @@ impl ProcessManager {
             child_processes: HashMap::new(),
             config_path,
             system: System::new(),
-            logs: HashMap::new(),
+            logs: Arc::new(Mutex::new(HashMap::new())),
+            app_handle: None,
         }
+    }
+
+    pub fn set_app_handle(&mut self, handle: AppHandle) {
+        self.app_handle = Some(handle);
     }
 
     pub fn create_process(
@@ -245,9 +254,11 @@ impl ProcessManager {
             _ => {}
         }
 
-        let child = std::process::Command::new("cmd")
+        let mut child = std::process::Command::new("cmd")
             .args(["/C", &process.command])
             .current_dir(&process.working_directory)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
             .spawn()
             .map_err(|e| KutorError::SpawnFailed(e.to_string()))?;
 
@@ -257,8 +268,71 @@ impl ProcessManager {
             .unwrap()
             .as_millis() as u64;
         process.status = ProcessStatus::Running { pid, started_at };
+
+        let stdout = child.stdout.take();
+        let stderr = child.stderr.take();
+
         self.child_processes.insert(id.to_string(), child);
+
+        if let Ok(mut logs) = self.logs.lock() {
+            logs.insert(id.to_string(), ProcessLog::new());
+        }
+
         self.save_to_disk()?;
+
+        if let (Some(app_handle), Some(stdout), Some(stderr)) = (&self.app_handle, stdout, stderr) {
+            let process_id = id.to_string();
+            let logs = Arc::clone(&self.logs);
+            let app_handle_stdout = app_handle.clone();
+            let app_handle_stderr = app_handle.clone();
+
+            std::thread::spawn(move || {
+                let reader = BufReader::new(stdout);
+                for line in reader.lines().flatten() {
+                    if let Ok(mut logs) = logs.lock() {
+                        if let Some(pl) = logs.get_mut(&process_id) {
+                            pl.push(LogLine {
+                                content: line.clone(),
+                                stream: "stdout".to_string(),
+                            });
+                        }
+                    }
+                    let _ = app_handle_stdout.emit(
+                        "process-output",
+                        serde_json::json!({
+                            "process_id": process_id,
+                            "line": line,
+                            "stream": "stdout"
+                        }),
+                    );
+                }
+            });
+
+            let process_id = id.to_string();
+            let logs = Arc::clone(&self.logs);
+
+            std::thread::spawn(move || {
+                let reader = BufReader::new(stderr);
+                for line in reader.lines().flatten() {
+                    if let Ok(mut logs) = logs.lock() {
+                        if let Some(pl) = logs.get_mut(&process_id) {
+                            pl.push(LogLine {
+                                content: line.clone(),
+                                stream: "stderr".to_string(),
+                            });
+                        }
+                    }
+                    let _ = app_handle_stderr.emit(
+                        "process-output",
+                        serde_json::json!({
+                            "process_id": process_id,
+                            "line": line,
+                            "stream": "stderr"
+                        }),
+                    );
+                }
+            });
+        }
 
         Ok(())
     }
@@ -277,9 +351,11 @@ impl ProcessManager {
             _ => {}
         }
 
-        let child = std::process::Command::new("sh")
+        let mut child = std::process::Command::new("sh")
             .args(["-c", &process.command])
             .current_dir(&process.working_directory)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
             .spawn()
             .map_err(|e| KutorError::SpawnFailed(e.to_string()))?;
 
@@ -289,8 +365,71 @@ impl ProcessManager {
             .unwrap()
             .as_millis() as u64;
         process.status = ProcessStatus::Running { pid, started_at };
+
+        let stdout = child.stdout.take();
+        let stderr = child.stderr.take();
+
         self.child_processes.insert(id.to_string(), child);
+
+        if let Ok(mut logs) = self.logs.lock() {
+            logs.insert(id.to_string(), ProcessLog::new());
+        }
+
         self.save_to_disk()?;
+
+        if let (Some(app_handle), Some(stdout), Some(stderr)) = (&self.app_handle, stdout, stderr) {
+            let process_id = id.to_string();
+            let logs = Arc::clone(&self.logs);
+            let app_handle_stdout = app_handle.clone();
+            let app_handle_stderr = app_handle.clone();
+
+            std::thread::spawn(move || {
+                let reader = BufReader::new(stdout);
+                for line in reader.lines().flatten() {
+                    if let Ok(mut logs) = logs.lock() {
+                        if let Some(pl) = logs.get_mut(&process_id) {
+                            pl.push(LogLine {
+                                content: line.clone(),
+                                stream: "stdout".to_string(),
+                            });
+                        }
+                    }
+                    let _ = app_handle_stdout.emit(
+                        "process-output",
+                        serde_json::json!({
+                            "process_id": process_id,
+                            "line": line,
+                            "stream": "stdout"
+                        }),
+                    );
+                }
+            });
+
+            let process_id = id.to_string();
+            let logs = Arc::clone(&self.logs);
+
+            std::thread::spawn(move || {
+                let reader = BufReader::new(stderr);
+                for line in reader.lines().flatten() {
+                    if let Ok(mut logs) = logs.lock() {
+                        if let Some(pl) = logs.get_mut(&process_id) {
+                            pl.push(LogLine {
+                                content: line.clone(),
+                                stream: "stderr".to_string(),
+                            });
+                        }
+                    }
+                    let _ = app_handle_stderr.emit(
+                        "process-output",
+                        serde_json::json!({
+                            "process_id": process_id,
+                            "line": line,
+                            "stream": "stderr"
+                        }),
+                    );
+                }
+            });
+        }
 
         Ok(())
     }
@@ -403,6 +542,16 @@ impl ProcessManager {
             uptime_secs,
             pid,
         })
+    }
+
+    pub fn get_process_logs(&self, id: &str) -> Result<Vec<LogLine>, KutorError> {
+        let logs = self
+            .logs
+            .lock()
+            .map_err(|_| KutorError::IoError("Failed to lock logs".to_string()))?;
+        logs.get(id)
+            .map(|pl| pl.buffer.iter().cloned().collect())
+            .ok_or_else(|| KutorError::ProcessNotFound(id.to_string()))
     }
 }
 

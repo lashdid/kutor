@@ -1,5 +1,5 @@
 use crate::error::KutorError;
-use crate::process_manager::ProcessView;
+use crate::process_manager::{LogLine, ProcessView};
 use std::sync::{Arc, Mutex};
 use tauri::State;
 
@@ -68,4 +68,15 @@ pub fn get_all_processes(
         .lock()
         .map_err(|_| KutorError::IoError("Failed to lock manager".to_string()))?;
     Ok(manager.get_all_processes())
+}
+
+#[tauri::command]
+pub fn get_process_logs(
+    id: String,
+    state: State<'_, Arc<Mutex<crate::process_manager::ProcessManager>>>,
+) -> Result<Vec<LogLine>, KutorError> {
+    let manager = state
+        .lock()
+        .map_err(|_| KutorError::IoError("Failed to lock manager".to_string()))?;
+    manager.get_process_logs(&id)
 }

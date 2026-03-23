@@ -25,6 +25,7 @@ pub fn run() {
             if let Err(e) = manager.reconcile_processes() {
                 eprintln!("Warning: Failed to reconcile processes: {}", e);
             }
+            manager.set_app_handle(app_handle.clone());
 
             app.manage(Arc::new(Mutex::new(manager)));
             Ok(())
@@ -36,6 +37,7 @@ pub fn run() {
             commands::restart_process,
             commands::delete_process,
             commands::get_all_processes,
+            commands::get_process_logs,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
