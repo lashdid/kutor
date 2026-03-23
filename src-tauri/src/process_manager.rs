@@ -1,12 +1,37 @@
 use crate::error::KutorError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fs;
 use std::path::PathBuf;
 use std::process::Child;
 use std::time::{SystemTime, UNIX_EPOCH};
 use sysinfo::System;
 use uuid::Uuid;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LogLine {
+    pub content: String,
+    pub stream: String,
+}
+
+pub struct ProcessLog {
+    pub buffer: VecDeque<LogLine>,
+}
+
+impl ProcessLog {
+    pub fn new() -> Self {
+        Self {
+            buffer: VecDeque::with_capacity(10000),
+        }
+    }
+
+    pub fn push(&mut self, line: LogLine) {
+        if self.buffer.len() >= 10000 {
+            self.buffer.pop_front();
+        }
+        self.buffer.push_back(line);
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ProcessStatus {
@@ -67,6 +92,7 @@ pub struct ProcessManager {
     child_processes: HashMap<String, Child>,
     config_path: PathBuf,
     system: System,
+    logs: HashMap<String, ProcessLog>,
 }
 
 impl ProcessManager {
@@ -76,6 +102,7 @@ impl ProcessManager {
             child_processes: HashMap::new(),
             config_path,
             system: System::new(),
+            logs: HashMap::new(),
         }
     }
 
