@@ -1,5 +1,7 @@
 import type { Process } from '../types/process'
 import { formatMemory, formatUptime } from '../utils/format'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 interface ProcessRowProps {
   process: Process
@@ -13,6 +15,21 @@ export function ProcessRow({ process, onStart, onStop, onRestart, onDelete }: Pr
   const isRunning = process.status === 'running'
   const isStopped = process.status === 'stopped'
   const isCrashed = process.status === 'crashed'
+
+  async function handleViewLog() {
+    const mainWindow = getCurrentWindow()
+    const webview = new WebviewWindow(`log-${process.id}`, {
+      url: '/',
+      title: `Log - ${process.name}`,
+      width: 800,
+      height: 500,
+      parent: mainWindow.label,
+    })
+    
+    webview.once('tauri://error', (e) => {
+      console.error('Failed to create log window:', e)
+    })
+  }
 
   return (
     <tr>
@@ -37,6 +54,9 @@ export function ProcessRow({ process, onStart, onStop, onRestart, onDelete }: Pr
         </button>
         <button onClick={() => onDelete(process.id)}>
           Delete
+        </button>
+        <button onClick={handleViewLog}>
+          Log
         </button>
       </td>
     </tr>
