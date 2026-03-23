@@ -17,3 +17,8 @@ export interface CreateProcessParams {
   command: string
   working_directory: string
 }
+
+export interface LogLine {
+  content: string
+  stream: 'stdout' | 'stderr'
+}
