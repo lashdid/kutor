@@ -5,8 +5,8 @@ use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::Child;
-use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::{Arc, Mutex, Weak};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use sysinfo::System;
 use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
@@ -41,6 +41,7 @@ pub enum ProcessStatus {
     Stopped,
     Running { pid: u32, started_at: u64 },
     Crashed { error: String },
+    Completed,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,6 +75,7 @@ impl From<&Process> for ProcessView {
                 pid: _,
                 started_at: _,
             } => ("running".to_string(), None),
+            ProcessStatus::Completed => ("completed".to_string(), None),
         };
 
         ProcessView {
@@ -97,6 +99,7 @@ pub struct ProcessManager {
     system: System,
     logs: Arc<Mutex<HashMap<String, ProcessLog>>>,
     app_handle: Option<AppHandle>,
+    self_ref: Option<Weak<Mutex<ProcessManager>>>,
 }
 
 impl ProcessManager {
@@ -108,11 +111,16 @@ impl ProcessManager {
             system: System::new(),
             logs: Arc::new(Mutex::new(HashMap::new())),
             app_handle: None,
+            self_ref: None,
         }
     }
 
     pub fn set_app_handle(&mut self, handle: AppHandle) {
         self.app_handle = Some(handle);
+    }
+
+    pub fn set_self_ref(&mut self, weak_ref: Weak<Mutex<ProcessManager>>) {
+        self.self_ref = Some(weak_ref);
     }
 
     pub fn create_process(
@@ -172,6 +180,7 @@ impl ProcessManager {
                             Some(*pid),
                         )
                     }
+                    ProcessStatus::Completed => ("completed".to_string(), None, None, None, None),
                 };
 
                 ProcessView {
@@ -332,6 +341,58 @@ impl ProcessManager {
                     );
                 }
             });
+
+            let monitor_process_id = id.to_string();
+            let monitor_self_ref = self.self_ref.clone();
+            let monitor_app_handle = app_handle.clone();
+
+            std::thread::spawn(move || loop {
+                std::thread::sleep(Duration::from_millis(100));
+
+                if let Some(self_arc) = monitor_self_ref.as_ref().and_then(|w| w.upgrade()) {
+                    if let Ok(mut manager) = self_arc.lock() {
+                        if let Some(child) = manager.child_processes.get_mut(&monitor_process_id) {
+                            match child.try_wait() {
+                                Ok(Some(status)) => {
+                                    let exit_code = status.code();
+                                    if let Some(process) =
+                                        manager.processes.get_mut(&monitor_process_id)
+                                    {
+                                        if exit_code == Some(0) {
+                                            process.status = ProcessStatus::Completed;
+                                        } else {
+                                            process.status = ProcessStatus::Crashed {
+                                                error: format!(
+                                                    "Process exited with code: {:?}",
+                                                    exit_code
+                                                ),
+                                            };
+                                        }
+                                    }
+                                    manager.child_processes.remove(&monitor_process_id);
+                                    let _ = manager.save_to_disk();
+                                    let _ = monitor_app_handle.emit(
+                                            "process-status-change",
+                                            serde_json::json!({
+                                                "process_id": monitor_process_id,
+                                                "status": if exit_code == Some(0) { "completed" } else { "crashed" }
+                                            }),
+                                        );
+                                    break;
+                                }
+                                Ok(None) => {}
+                                Err(_) => {
+                                    break;
+                                }
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    break;
+                }
+            });
         }
 
         Ok(())
@@ -427,6 +488,58 @@ impl ProcessManager {
                             "stream": "stderr"
                         }),
                     );
+                }
+            });
+
+            let monitor_process_id = id.to_string();
+            let monitor_self_ref = self.self_ref.clone();
+            let monitor_app_handle = app_handle.clone();
+
+            std::thread::spawn(move || loop {
+                std::thread::sleep(Duration::from_millis(100));
+
+                if let Some(self_arc) = monitor_self_ref.as_ref().and_then(|w| w.upgrade()) {
+                    if let Ok(mut manager) = self_arc.lock() {
+                        if let Some(child) = manager.child_processes.get_mut(&monitor_process_id) {
+                            match child.try_wait() {
+                                Ok(Some(status)) => {
+                                    let exit_code = status.code();
+                                    if let Some(process) =
+                                        manager.processes.get_mut(&monitor_process_id)
+                                    {
+                                        if exit_code == Some(0) {
+                                            process.status = ProcessStatus::Completed;
+                                        } else {
+                                            process.status = ProcessStatus::Crashed {
+                                                error: format!(
+                                                    "Process exited with code: {:?}",
+                                                    exit_code
+                                                ),
+                                            };
+                                        }
+                                    }
+                                    manager.child_processes.remove(&monitor_process_id);
+                                    let _ = manager.save_to_disk();
+                                    let _ = monitor_app_handle.emit(
+                                            "process-status-change",
+                                            serde_json::json!({
+                                                "process_id": monitor_process_id,
+                                                "status": if exit_code == Some(0) { "completed" } else { "crashed" }
+                                            }),
+                                        );
+                                    break;
+                                }
+                                Ok(None) => {}
+                                Err(_) => {
+                                    break;
+                                }
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    break;
                 }
             });
         }
@@ -529,6 +642,7 @@ impl ProcessManager {
                     Some(*pid),
                 )
             }
+            ProcessStatus::Completed => ("completed".to_string(), None, None, None, None),
         };
 
         Ok(ProcessView {

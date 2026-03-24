@@ -27,7 +27,13 @@ pub fn run() {
             }
             manager.set_app_handle(app_handle.clone());
 
-            app.manage(Arc::new(Mutex::new(manager)));
+            let manager_arc = Arc::new(Mutex::new(manager));
+            manager_arc
+                .lock()
+                .unwrap()
+                .set_self_ref(Arc::downgrade(&manager_arc));
+
+            app.manage(manager_arc);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

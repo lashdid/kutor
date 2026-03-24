@@ -15,6 +15,7 @@ export function ProcessRow({ process, onStart, onStop, onRestart, onDelete }: Pr
   const isRunning = process.status === 'running'
   const isStopped = process.status === 'stopped'
   const isCrashed = process.status === 'crashed'
+  const isCompleted = process.status === 'completed'
 
   async function handleViewLog() {
     const mainWindow = getCurrentWindow()
@@ -31,11 +32,18 @@ export function ProcessRow({ process, onStart, onStop, onRestart, onDelete }: Pr
     })
   }
 
+  const getStatusColor = () => {
+    if (isRunning) return 'green'
+    if (isCompleted) return 'blue'
+    if (isCrashed) return 'red'
+    return 'gray'
+  }
+
   return (
     <tr>
       <td>{process.name}</td>
       <td>{process.pid ?? '-'}</td>
-      <td style={{ color: isRunning ? 'green' : isCrashed ? 'red' : 'gray' }}>
+      <td style={{ color: getStatusColor() }}>
         {process.status}
         {process.error_message && <span title={process.error_message}> (error)</span>}
       </td>
@@ -43,7 +51,7 @@ export function ProcessRow({ process, onStart, onStop, onRestart, onDelete }: Pr
       <td>{formatMemory(process.memory_bytes)}</td>
       <td>{formatUptime(process.uptime_secs)}</td>
       <td>
-        <button onClick={() => onStart(process.id)} disabled={!isStopped && !isCrashed}>
+        <button onClick={() => onStart(process.id)} disabled={!isStopped && !isCrashed && !isCompleted}>
           Start
         </button>
         <button onClick={() => onStop(process.id)} disabled={!isRunning}>
