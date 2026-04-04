@@ -15,12 +15,18 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@heroui/react": "^3.0.2",
+    "@heroui/styles": "^3.0.2",
+    "@tailwindcss/postcss": "^4.2.2",
     "@tanstack/react-query": "^5.91.0",
     "@tanstack/react-table": "^8.21.3",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "^2.6.0",
+    "postcss": "^8.5.8",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "tailwind-variants": "^3.2.2",
+    "tailwindcss": "^4.2.2",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
