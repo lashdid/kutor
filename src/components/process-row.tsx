@@ -2,6 +2,8 @@ import type { Process } from '../types/process'
 import { formatMemory, formatUptime } from '../utils/format'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { Button, Chip, Table, Tooltip } from '@heroui/react'
+import { Play, Stop, ArrowRotateRight, TrashBin, TextAlignLeft } from '@gravity-ui/icons'
 
 interface ProcessRowProps {
   process: Process
@@ -13,7 +15,6 @@ interface ProcessRowProps {
 
 export function ProcessRow({ process, onStart, onStop, onRestart, onDelete }: ProcessRowProps) {
   const isRunning = process.status === 'running'
-  const isStopped = process.status === 'stopped'
   const isCrashed = process.status === 'crashed'
   const isCompleted = process.status === 'completed'
 
@@ -32,41 +33,104 @@ export function ProcessRow({ process, onStart, onStop, onRestart, onDelete }: Pr
     })
   }
 
-  const getStatusColor = () => {
-    if (isRunning) return 'green'
-    if (isCompleted) return 'blue'
-    if (isCrashed) return 'red'
-    return 'gray'
+  const getStatusColor = (): 'success' | 'danger' | 'warning' | 'default' => {
+    if (isRunning) return 'success'
+    if (isCompleted) return 'default'
+    if (isCrashed) return 'danger'
+    return 'warning'
   }
 
   return (
-    <tr>
-      <td>{process.name}</td>
-      <td>{process.pid ?? '-'}</td>
-      <td style={{ color: getStatusColor() }}>
-        {process.status}
-        {process.error_message && <span title={process.error_message}> (error)</span>}
-      </td>
-      <td>{process.working_directory}</td>
-      <td>{formatMemory(process.memory_bytes)}</td>
-      <td>{formatUptime(process.uptime_secs)}</td>
-      <td>
-        <button onClick={() => onStart(process.id)} disabled={!isStopped && !isCrashed && !isCompleted}>
-          Start
-        </button>
-        <button onClick={() => onStop(process.id)} disabled={!isRunning}>
-          Stop
-        </button>
-        <button onClick={() => onRestart(process.id)} disabled={!isRunning}>
-          Restart
-        </button>
-        <button onClick={() => onDelete(process.id)}>
-          Delete
-        </button>
-        <button onClick={handleViewLog}>
-          Log
-        </button>
-      </td>
-    </tr>
+    <Table.Row id={process.id}>
+      <Table.Cell>{process.name}</Table.Cell>
+      <Table.Cell>{process.pid ?? '-'}</Table.Cell>
+      <Table.Cell>
+        <div className="flex gap-1 items-center">
+          <Chip color={getStatusColor()} variant="soft" size="sm">
+            {process.status}
+          </Chip>
+          {process.error_message && (
+            <Chip color="danger" variant="soft" size="sm">
+              error
+            </Chip>
+          )}
+        </div>
+      </Table.Cell>
+      <Table.Cell>{process.working_directory}</Table.Cell>
+      <Table.Cell>{formatMemory(process.memory_bytes)}</Table.Cell>
+      <Table.Cell>{formatUptime(process.uptime_secs)}</Table.Cell>
+      <Table.Cell>
+        <div className="flex gap-1">
+          {isRunning ? (
+            <Tooltip delay={0}>
+              <Button
+                onPress={() => onStop(process.id)}
+                isIconOnly
+                size="sm"
+                variant="secondary"
+              >
+                <Stop />
+              </Button>
+              <Tooltip.Content>
+                <p>Stop</p>
+              </Tooltip.Content>
+            </Tooltip>
+          ) : (
+            <Tooltip delay={0}>
+              <Button
+                onPress={() => onStart(process.id)}
+                isDisabled={isRunning}
+                isIconOnly
+                size="sm"
+                variant="secondary"
+              >
+                <Play />
+              </Button>
+              <Tooltip.Content>
+                <p>Start</p>
+              </Tooltip.Content>
+            </Tooltip>
+          )}
+
+          <Tooltip delay={0}>
+            <Button
+              onPress={() => onRestart(process.id)}
+              isDisabled={!isRunning}
+              isIconOnly
+              size="sm"
+              variant="secondary"
+            >
+              <ArrowRotateRight />
+            </Button>
+            <Tooltip.Content>
+              <p>Restart</p>
+            </Tooltip.Content>
+          </Tooltip>
+
+          <Tooltip delay={0}>
+            <Button
+              onPress={() => onDelete(process.id)}
+              isIconOnly
+              size="sm"
+              variant="danger-soft"
+            >
+              <TrashBin />
+            </Button>
+            <Tooltip.Content>
+              <p>Delete</p>
+            </Tooltip.Content>
+          </Tooltip>
+
+          <Tooltip delay={0}>
+            <Button onPress={handleViewLog} isIconOnly size="sm" variant="tertiary">
+              <TextAlignLeft />
+            </Button>
+            <Tooltip.Content>
+              <p>View Log</p>
+            </Tooltip.Content>
+          </Tooltip>
+        </div>
+      </Table.Cell>
+    </Table.Row>
   )
 }

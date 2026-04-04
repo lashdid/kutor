@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useProcessLogs } from '../hooks/use-process-logs'
-import './process-log.css'
+import { Card } from '@heroui/react'
 
 export default function ProcessLog() {
   const window = getCurrentWindow()
@@ -21,27 +21,49 @@ export default function ProcessLog() {
   }, [logs])
 
   if (isLoading) {
-    return <div className="process-log-container">Loading...</div>
+    return (
+      <Card variant="transparent">
+        <Card.Content>Loading...</Card.Content>
+      </Card>
+    )
   }
 
   if (error) {
-    return <div className="process-log-container">Error: {error}</div>
+    return (
+      <Card variant="transparent">
+        <Card.Content>Error: {error}</Card.Content>
+      </Card>
+    )
   }
 
   return (
-    <div className="process-log-container" ref={logContainerRef}>
-      {logs.length === 0 ? (
-        <div className="process-log-empty">No logs yet. Start the process to see output.</div>
-      ) : (
-        logs.map((log, index) => (
-          <div
-            key={index}
-            className={`process-log-line ${log.stream === 'stderr' ? 'stderr' : 'stdout'}`}
-          >
-            {log.content}
+    <Card variant="transparent">
+      <Card.Content
+        ref={logContainerRef}
+        className="h-screen overflow-y-auto p-2 font-mono text-xs"
+        style={{
+          backgroundColor: '#1e1e1e',
+          color: '#d4d4d4',
+        }}
+      >
+        {logs.length === 0 ? (
+          <div className="text-gray-500 italic">
+            No logs yet. Start the process to see output.
           </div>
-        ))
-      )}
-    </div>
+        ) : (
+          <div className="space-y-0.5">
+            {logs.map((log, index) => (
+              <div
+                key={index}
+                className="whitespace-pre-wrap break-all"
+                style={{ color: log.stream === 'stderr' ? '#f14c4c' : '#d4d4d4' }}
+              >
+                {log.content}
+              </div>
+            ))}
+          </div>
+        )}
+      </Card.Content>
+    </Card>
   )
 }

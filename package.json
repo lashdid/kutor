@@ -15,6 +15,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@gravity-ui/icons": "^2.18.0",
     "@heroui/react": "^3.0.2",
     "@heroui/styles": "^3.0.2",
     "@tailwindcss/postcss": "^4.2.2",
