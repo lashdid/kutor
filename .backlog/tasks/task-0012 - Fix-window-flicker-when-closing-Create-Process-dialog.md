@@ -1,9 +1,10 @@
 ---
 id: TASK-0012
 title: Fix window flicker when closing Create Process dialog
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-04-04 04:50'
+updated_date: '2026-04-04 04:51'
 labels: []
 dependencies: []
 priority: high
@@ -28,3 +29,31 @@ priority: high
 - [ ] #3 [ ] Compare behavior with Logs window to ensure consistent window focus handling
 - [ ] #4 [ ] Test on multiple focus/defocus cycles to confirm stability
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Root Cause Analysis
+
+**Investigation Date:** 2026-04-04
+
+**Findings:**
+
+- **Root Cause:** The Create Process dialog disables the main window (`setEnabled(false)`) when opening and re-enables it (`setEnabled(true)`) + sets focus (`setFocus()`) when closing
+
+- **Why it flickers:** The enable/disable state transitions create visible visual artifacts during window lifecycle
+
+- **Contrast with Logs window:** Logs window opens WITHOUT manipulating main window state - it just creates the WebviewWindow with no setEnabled/setFocus calls
+
+- **Comparison:**
+
+- Create Process (broken): Disables main → opens dialog → on close: enables main + sets focus
+
+- Logs (working): No main window manipulation at all
+
+**Solution:** Remove the setEnabled(false) call on open and remove the setFocus() call on close. The WebviewWindow's parent property already handles modal-like behavior.
+
+**Files to modify:**
+
+- `src/pages/home.tsx` (lines 9, 18-19): Remove mainWindow.setEnabled(false) and remove mainWindow.setEnabled(true) + setFocus() from destroyed handler
+<!-- SECTION:NOTES:END -->
