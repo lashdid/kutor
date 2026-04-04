@@ -6,7 +6,6 @@ import { ProcessTable } from '../components/process-table'
 export default function Home() {
   const handleCreateProcess = async () => {
     const mainWindow = getCurrentWindow()
-    await mainWindow.setEnabled(false)
     const webview = new WebviewWindow('create-process', {
       url: '/',
       title: 'Create Process',
@@ -14,16 +13,8 @@ export default function Home() {
       height: 300,
       parent: mainWindow.label,
     })
-    webview.once('tauri://destroyed', async () => {
-      await mainWindow.setEnabled(true)
-      await mainWindow.setFocus()
-    })
-    await webview.once('tauri://created', () => {
-      console.log('Create process window created')
-    })
-    await webview.once('tauri://error', async (e) => {
+    webview.once('tauri://error', (e) => {
       console.error('Failed to create window:', e)
-      await mainWindow.setEnabled(true)
     })
   }
 
