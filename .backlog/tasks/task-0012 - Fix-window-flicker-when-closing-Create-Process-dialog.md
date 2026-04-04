@@ -4,7 +4,7 @@ title: Fix window flicker when closing Create Process dialog
 status: In Progress
 assignee: []
 created_date: '2026-04-04 04:50'
-updated_date: '2026-04-04 04:51'
+updated_date: '2026-04-04 06:05'
 labels: []
 dependencies: []
 priority: high
@@ -63,4 +63,28 @@ priority: high
 - Open/close Create Process dialog - verify no flicker
 - Check main window focus after dialog closes
 - Compare behavior with Logs window for consistency
+
+---
+
+## Checkpoint 1: Fix Implemented
+
+**Date:** 2026-04-04
+
+**Status:** Code changes complete, automated verification passed
+
+**Changes:**
+
+- Modified `src/pages/home.tsx`
+
+- Removed window enable/disable cycle that caused flicker
+
+- Simplified event handler registration
+
+**Verification passed:**
+
+- ✅ TypeScript compilation
+
+- ✅ All tests passing (9/9)
+
+**Next:** Manual testing required to confirm flicker elimination
 <!-- SECTION:NOTES:END -->
