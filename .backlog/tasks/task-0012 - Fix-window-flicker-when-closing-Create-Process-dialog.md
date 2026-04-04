@@ -37,23 +37,30 @@ priority: high
 
 **Investigation Date:** 2026-04-04
 
-**Findings:**
+**Root Cause:** The Create Process dialog disables the main window (`setEnabled(false)`) when opening and re-enables it (`setEnabled(true)`) + sets focus (`setFocus()`) when closing. This creates visible visual artifacts (flicker) during window lifecycle.
 
-- **Root Cause:** The Create Process dialog disables the main window (`setEnabled(false)`) when opening and re-enables it (`setEnabled(true)`) + sets focus (`setFocus()`) when closing
+**Working Pattern (Logs window):** Opens WITHOUT any main window manipulation - just creates the WebviewWindow with parent property, no setEnable/setFocus calls.
 
-- **Why it flickers:** The enable/disable state transitions create visible visual artifacts during window lifecycle
+**Broken Pattern (Create Process):** Disables main → opens dialog → on close: enables main + sets focus
 
-- **Contrast with Logs window:** Logs window opens WITHOUT manipulating main window state - it just creates the WebviewWindow with no setEnabled/setFocus calls
+## Fix Implementation
 
-- **Comparison:**
+**Changes in `src/pages/home.tsx`:**
+- Removed `mainWindow.setEnabled(false)` when opening Create Process window
+- Removed `mainWindow.setEnabled(true)` and `mainWindow.setFocus()` from destroyed event handler
+- Removed redundant error handler that re-enabled main window
+- Simplified event handler registration
 
-- Create Process (broken): Disables main → opens dialog → on close: enables main + sets focus
+**Rationale:** The `parent` property in WebviewWindow configuration already provides modal-like behavior. The enable/disable cycle was unnecessary and caused the flicker.
 
-- Logs (working): No main window manipulation at all
+## Verification
 
-**Solution:** Remove the setEnabled(false) call on open and remove the setFocus() call on close. The WebviewWindow's parent property already handles modal-like behavior.
+**Automated:**
+- ✅ TypeScript compilation passes (build succeeded)
+- ✅ All 9 tests pass
 
-**Files to modify:**
-
-- `src/pages/home.tsx` (lines 9, 18-19): Remove mainWindow.setEnabled(false) and remove mainWindow.setEnabled(true) + setFocus() from destroyed handler
+**Manual testing required:**
+- Open/close Create Process dialog - verify no flicker
+- Check main window focus after dialog closes
+- Compare behavior with Logs window for consistency
 <!-- SECTION:NOTES:END -->
