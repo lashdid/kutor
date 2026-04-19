@@ -9,7 +9,8 @@ import { useProcessTable } from '../hooks/use-process-table'
 import { SortableHeader } from './sortable-header'
 import { StatusChip, ActionButtons } from './process-table-helpers'
 import { formatMemory, formatUptime } from '../utils/format'
-import { toSortDescriptor, toSortingState } from '../hooks/sort-bridge'
+import { toSortDescriptor } from '../hooks/sort-bridge'
+import type { SortDescriptor } from '../hooks/sort-bridge'
 
 export function ProcessTable() {
   const { data: processes, isLoading, error } = useProcesses()
@@ -25,8 +26,17 @@ export function ProcessTable() {
   const sorting = table.getState().sorting
   const sortDescriptor = useMemo(() => toSortDescriptor(sorting), [sorting])
 
-  const handleSortChange = (descriptor: Parameters<typeof toSortingState>[0]) => {
-    table.setSorting(toSortingState(descriptor))
+  const handleSortChange = (descriptor: SortDescriptor) => {
+    const currentSort = sorting[0]
+    const clickedColumn = String(descriptor.column)
+
+    if (!currentSort || currentSort.id !== clickedColumn) {
+      table.setSorting([{ id: clickedColumn, desc: false }])
+    } else if (!currentSort.desc) {
+      table.setSorting([{ id: clickedColumn, desc: true }])
+    } else {
+      table.setSorting([])
+    }
   }
 
   const pageSize = table.getState().pagination.pageSize
@@ -77,8 +87,8 @@ export function ProcessTable() {
               ))}
               <Table.Column>Actions</Table.Column>
             </Table.Header>
-            <Table.Body>
-              {rows.map((row) => {
+            <Table.Body renderEmptyState={() => <div className="py-6 text-center text-muted-foreground">No Process Found</div>}>
+              {rows.length > 0 && rows.map((row) => {
                 const process = row.original
                 return (
                   <Table.Row key={process.id} id={process.id}>
